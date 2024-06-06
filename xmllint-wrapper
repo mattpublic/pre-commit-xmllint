@@ -1,0 +1,33 @@
+#!/bin/bash
+
+FLAGS=()
+while [ -n "$1" -a "$1" != "--" ]; do
+  FLAGS+=("$1")
+  shift
+done
+if [ "$1" != "--" ]; then
+  echo "$0: '--' must be provided after xmllint flags." >&2
+  exit 1
+fi
+shift  # the "--"
+FILES=("$@")
+
+tmpstdout=$(mktemp)
+tmpstderr=$(mktemp)
+
+trap "rm $tmpstdout $tmpstderr" 0
+
+errors=0
+for file in "${FILES[@]}"; do
+  xmllint "${FLAGS[@]}" "$file" > $tmpstdout 2> $tmpstderr
+  err=$?
+  if [ $err -ne 0 ]; then
+    echo Error processing "$file"
+    cat $tmpstdout
+    cat $tmpstderr >&2
+    errors=$((errors + 1))
+    continue
+  fi
+  diff $tmpstdout "$file" >/dev/null 2>&1 || cp $tmpstdout "$file"
+done
+exit $errors

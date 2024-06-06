@@ -1,0 +1,6 @@
+- id: xmllint-format
+  name: Overwrite files with the output of xmllint
+  entry: xmllint-wrapper
+  args: [--exc-c14n, --]
+  language: script
+  files: \.(xml|qlr)$
